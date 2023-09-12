@@ -29,10 +29,7 @@ func main() {
 
 	// setup oms integration service
 	omsClient := setupOmsClient(conf.OmsHost, conf.OmsToken)
-	omsIntegrationService, err := consumer.NewOmsService(conf, omsClient)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	omsIntegrationService := consumer.NewOmsService(omsClient)
 
 	// create new consumer
 	consumer, err := consumer.NewRabbitMQConsumer(conn, conf.OmsNewOrderQueue, numWorkers, omsIntegrationService)

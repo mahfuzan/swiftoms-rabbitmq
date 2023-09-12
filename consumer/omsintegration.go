@@ -4,20 +4,14 @@ import (
 	"log"
 
 	"github.com/mahfuzan/swiftoms-rabbitmq/client/omsclient"
-	"github.com/mahfuzan/swiftoms-rabbitmq/config"
 )
 
 type OmsIntegrationService struct {
-	conf      config.Config
 	omsClient omsclient.Client
 }
 
-func NewOmsService(
-	conf config.Config,
-	omsClient omsclient.Client) (*OmsIntegrationService, error) {
-	return &OmsIntegrationService{
-		conf:      conf,
-		omsClient: omsClient}, nil
+func NewOmsService(omsClient omsclient.Client) *OmsIntegrationService {
+	return &OmsIntegrationService{omsClient: omsClient}
 }
 
 // OmsIntegration process queue message to create order to OMS.
