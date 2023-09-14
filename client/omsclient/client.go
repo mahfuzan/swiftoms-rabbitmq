@@ -38,6 +38,8 @@ func (c *client) CreateOrder(request CreateOrderRequest) (*CreateOrderResponse, 
 		err = errors.Wrap(err, "Execute API call")
 		return nil, err
 	}
+
+	log.Printf("URL: %s", resp.Request.URL)
 	log.Printf("API call response time: %v seconds", resp.Time().Seconds())
 
 	respModel, ok := resp.Result().(*CreateOrderResponse)

@@ -1,44 +1,46 @@
 package main
 
 import (
-	"flag"
-	"fmt"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/mahfuzan/swiftoms-rabbitmq/client/omsclient"
 	"github.com/mahfuzan/swiftoms-rabbitmq/config"
 	"github.com/mahfuzan/swiftoms-rabbitmq/consumer"
-	"github.com/streadway/amqp"
 )
 
 func main() {
-	conf := config.NewConfig()
+	configs := config.NewConfig()
 
-	// get number of workers from cli argument
-	var numWorkers int
-	flag.IntVar(&numWorkers, "w", 1, "number of workers")
-	flag.Parse()
+	// Create a channel to listen for OS signals
+	sigCh := make(chan os.Signal, 1)
 
-	// create connection to rabbitmq
-	connString := fmt.Sprintf("amqp://%s:%s@%s:%s/", conf.AmqpUser, conf.AmqpPassword, conf.AmqpHost, conf.AmqpPort)
-	conn, err := amqp.Dial(connString)
-	if err != nil {
-		log.Fatalf("Failed to connect to RabbitMQ: %v", err)
-	}
-	defer conn.Close()
+	// Notify the sigCh channel for the specified signals
+	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 
-	// setup oms integration service
-	omsClient := setupOmsClient(conf.OmsHost, conf.OmsToken)
-	omsIntegrationService := consumer.NewOmsService(omsClient)
+	go func() {
+		for _, conf := range configs.ServiceConfigs {
+			// Setup oms integration service
+			omsClient := setupOmsClient(conf.SwiftomsHost, conf.SwiftomsToken)
+			omsIntegrationService := consumer.NewOmsService(omsClient)
 
-	// create new consumer
-	consumer, err := consumer.NewRabbitMQConsumer(conn, conf.OmsNewOrderQueue, numWorkers, omsIntegrationService)
-	if err != nil {
-		log.Fatalf("Failed to create RabbitMQ consumer: %v", err)
-	}
+			// Create new consumer
+			consumer, err := consumer.NewRabbitMQConsumer(conf, omsIntegrationService)
+			if err != nil {
+				log.Fatalf("Failed to create RabbitMQ consumer: %v", err)
+			}
 
-	// consume message
-	consumer.ConsumeMessages()
+			// Consume messages
+			go consumer.ConsumeMessages()
+		}
+	}()
+
+	// Wait for a signal to exit
+	<-sigCh
+
+	log.Printf("Received %v signal. Exiting...", sigCh)
 }
 
 // setupOmsClient setup a new oms client.

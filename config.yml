@@ -1,0 +1,22 @@
+service_configs:
+  - service_name: oms-local
+    amqp_host: 127.0.0.1
+    amqp_port: 5672
+    amqp_username: guest
+    amqp_password: guest
+    amqp_vhost: oms_dev
+    queue_configs:
+      - queue_name: swiftoms.order-queue.new
+        number_of_workers: 3
+    swiftoms_host: https://local.swiftoms.com/
+    swiftoms_token: 
+  - service_name: oms-local
+    amqp_host: 127.0.0.1
+    amqp_port: 5672
+    amqp_username: guest
+    amqp_password: guest
+    amqp_vhost: oms_staging
+    queue_configs:
+      - queue_name: swiftoms.order-queue.new
+        number_of_workers: 3
+    swiftoms_host: https://local.swiftoms.com/
